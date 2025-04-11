@@ -30,7 +30,7 @@ def sign_up(request):
             logger.info("User create and token generated for username: %s", user.username)
             return Response({"token": token.key, "user": serializer.data})
         
-        logger.warning("invalid sign-up data: %s", serializer.errors)
+        logger.warning("Invalid sign-up data: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     except IntegrityError as e:
