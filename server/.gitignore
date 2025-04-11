@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+db.sqlite3
+media/
+staticfiles/
+
+# Environment variables
+.env
+
+# Virtualenv
+venv/
+.venv/
+env/
+ENV/
+
+# IDEs/editors
+.vscode/
+.idea/
+.DS_Store
+
+# Migrations (optional — only if you don’t want to track them early)
+# **/migrations/
+# !**/migrations/__init__.py
