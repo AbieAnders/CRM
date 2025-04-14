@@ -5,6 +5,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = User
         fields = ['id', 'username', 'password', 'email']
+        extra_kwargs = {'password': {'write_only': True}}
 
     def validate_email(self, value):
         user_id = self.instance.id if self.instance else None

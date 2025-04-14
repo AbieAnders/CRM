@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import ContactViewSet
 
 router = DefaultRouter()
-router.register(r'contacts', ContactViewSet, basename='contact')
+router.register(r'', ContactViewSet)
 
 urlpatterns = [
-    path('contacts_/', include(router.urls))
+    path('', include(router.urls))
 ]
