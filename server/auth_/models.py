@@ -1,7 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from datetime import timedelta
+
+class Organization(models.Model):
+    org_name = models.CharField(max_length=255, unique=True)
+    org_created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.org_name
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
+
+    def __str__(self):
+        return f"{self.user.username} Profile"
 
 class ExpiringToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="active_sessions")

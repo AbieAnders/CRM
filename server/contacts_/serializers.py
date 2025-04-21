@@ -8,23 +8,14 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = [
-            'username',
-            'email',
+            'username', 'email',
             
-            'id',
-            'company_name',
-            'contact_email',
-            'contact_phone',
-            'sales_owner',
+            'id', 'company_name', 'contact_email', 'contact_phone', 'sales_owner',
 
-            'contact_designation',
-            'contact_gender',
-            'contact_branch',
-            'branch_address',
+            'contact_designation', 'contact_gender', 'contact_branch', 'branch_address',
 
-            'lifecycle_status',
-            'loss_reason',
-            'last_contact_date',
-            'contacted_by',
+            'lifecycle_status', 'loss_reason',
+            
+            'last_contact_date', 'contacted_by',
         ]
-        read_only = ['username', 'email', 'created_at']
+        read_only_fields = ['username', 'email', 'created_at']

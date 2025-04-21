@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 
-import NavbarComponent from '../../layout/Navbar';
+import NavbarComponent from '../../layout/sidebar/Sidebar';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
+import { SidebarProvider } from '../../components/ui/sidebar';
 
 const SignUpComponent: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -25,11 +26,10 @@ const SignUpComponent: React.FC = () => {
     }
 
     return (
-        <div>
-            <NavbarComponent />
+        <>
             <Card className='w-full max-w-2xl min-w-[400px] flex flex-col justify-between p-10 sm:p-12 shadow-lg mx-auto mt-12'>
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
+                    <CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
                     <CardDescription className="text-sm text-muted-foreground">Register your credentials</CardDescription>
                 </CardHeader>
                 <CardContent className=''>
@@ -51,7 +51,7 @@ const SignUpComponent: React.FC = () => {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </>
     )
 }
 

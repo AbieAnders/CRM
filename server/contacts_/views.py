@@ -10,8 +10,11 @@ class ContactViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-    
     def get_queryset(self):
-        return Customer.objects.filter(user=self.request.user).order_by('-created_at')
+        user_org = self.request.user.profile.organization
+        return Customer.objects.filter(organization=user_org).order_by('-created_at')
+    
+    def perform_create(self, serializer):
+        profile = self.request.user.profile
+        serializer.save(user=self.request.user, organization=profile.organization)
+    

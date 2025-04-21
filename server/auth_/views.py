@@ -38,11 +38,11 @@ def sign_up(request):
     try:
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
             
-            user = User.objects.get(username=request.data['username'])
+            '''user = User.objects.get(username=request.data['username'])
             user.set_password(request.data['password'])
-            user.save()
+            user.save()'''
             
             refresh_token = RefreshToken.for_user(user)
             access_token = str(refresh_token.access_token)

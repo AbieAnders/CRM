@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from auth_.models import Organization
 from phonenumber_field.modelfields import PhoneNumberField
-from django.core.validators import RegexValidator
+#from django.core.validators import RegexValidator
 
 class Customer(models.Model):
     LIFECYCLE_STAGES = [
@@ -18,6 +19,7 @@ class Customer(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customers')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='customers')
     
     #company/customer or contact details
     company_name = models.CharField(max_length=30)

@@ -17,7 +17,7 @@ class Contact(models.Model):
     #sales_owner = models.CharField(max_length=30)
     contact_designation = models.CharField(max_length=10)
     #contact_gender = models.CharField(max_length=1,choices=GENDERS, blank=True)
-    address = models.TextField(max_length=255, blank=True)
+    branch_address = models.TextField(max_length=255, blank=True)
     #contact_branch = models.CharField(max_length=20, blank=True)  #company contacts branch
     #branches = models.JSONField(blank=True, null=True)  #cities of companys branches
     #branches = models.TextField(blank=True)
@@ -30,11 +30,10 @@ class Contact(models.Model):
     )'''
 
     last_correspondence = models.DateField(blank=True, null=True)
-    corresponder= models.CharField(max_length=30,blank=True)
-    updated_at = models.DateTimeField(auto_now=True) #setup save() for this
+    corresponder= models.CharField(max_length=30, blank=True)
+    updated_time = models.DateTimeField(auto_now=True) #setup save() for this
 
     def __str__(self):
-        #return f"{self.first_name} {self.last_name} ({self.address})"
         return f"Contact #{self.pk} ({self.address})"
     
     class Meta:
