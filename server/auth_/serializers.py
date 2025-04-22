@@ -28,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         organization = Organization.objects.filter(org_name__iexact=org_name).first()
 
         if not organization:
-            organization = Organization.objects.create(org_name=org_name)
+            organization = Organization.objects.create(name=org_name)
 
         user = User.objects.create_user(**validated_data)
         user.profile.organization = organization
