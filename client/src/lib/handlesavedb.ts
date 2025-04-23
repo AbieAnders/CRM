@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const saveDB = async (id: number, updatedRow: any, httpVerb: string | undefined) => {
-    const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1MzI2NzgyLCJpYXQiOjE3NDUzMjQ5ODIsImp0aSI6IjY0NTYxZWZhZWM2MDRhM2JhNzA2OWU5ZGUwNjcwMjZiIiwidXNlcl9pZCI6M30.tZxKpabV33EjSJoqlKHj0b3KANwr0lySShYMQli7W34";
+    const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1MzkyNTI5LCJpYXQiOjE3NDUzOTA3MjksImp0aSI6IjE4Njk5NTY1MDc3ZDQ3YzU5MzJjN2ZiNTA1MjM1MzVhIiwidXNlcl9pZCI6M30.nSwWnIcC4doFi6fQDpXfbCX9BX-na6tVehdykLvjeU0";
     try {
         if (httpVerb == 'patch') {
             const response = await axios.patch(`http://127.0.0.1:8000/customers/${id}/`,

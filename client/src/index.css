@@ -4,6 +4,13 @@
 
 /* custom classes */
 
+html, body {
+  margin: 0;
+  padding:0;
+  height: auto;
+  min-height: 100%;
+}
+
 .text-stroke {
   -webkit-text-stroke: 1px green;
   color: transparent;

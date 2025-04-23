@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import { ThemeProvider } from './components/ui/theme-provider.tsx';
 
-import SignUpComponent from './pages/_auth/SignUpForm.tsx';
-import SignInComponent from './pages/_auth/SignInForm.tsx';
+import SignUpComponent from './pages/_auth/SignUpPage.tsx';
+import SignInComponent from './pages/_auth/SignInPage.tsx';
 import ForgotPasswordComponent from './pages/_auth/ForgotPasswordForm.tsx';
 
 import DashboardPageComponent from './pages/_dashboard/DashboardPage.tsx';
