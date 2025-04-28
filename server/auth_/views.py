@@ -1,5 +1,9 @@
 import logging
+from django.conf import settings
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
+from .models import ExpiringToken, Organization, UserProfile
 
 from .serializers import UserSerializer
 from django.contrib.auth.models import User
@@ -26,7 +30,6 @@ from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 
-
 logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
@@ -35,20 +38,20 @@ logger = logging.getLogger(__name__)
 @permission_classes([AllowAny])  #Allows any user to sign-up
 def sign_up(request):
     logger.info("Received Sign-Up Request: %s", request.data)
+    serializer = UserSerializer(data=request.data)
     try:
-        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            
-            '''user = User.objects.get(username=request.data['username'])
-            user.set_password(request.data['password'])
-            user.save()'''
-            
             refresh_token = RefreshToken.for_user(user)
             access_token = str(refresh_token.access_token)
-            
-            logger.info("User created and JWT tokens generated for username: %s", user.username)
-            return Response({"user": serializer.data, "access token": access_token, "refresh_token": str(refresh_token)})
+
+            response = JsonResponse({
+                "user": serializer.data,
+                "access-token": access_token,
+                "refresh-token": str(refresh_token)
+            })
+            logger.info("User created and tokens generated for username: %s", user.username)
+            return response
         
         logger.warning("Invalid sign-up data: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -71,21 +74,41 @@ def sign_up(request):
 def sign_in(request):
     logger.info("Received Sign-In Request: %s", request.data)
     try:
-        user = get_object_or_404(User, username=request.data['username'])
-        
-        if not user.check_password(request.data['password']):
-            logger.warning("Invalid password attempt for username: %s", request.data['username'])
+        username_ = request.data['username']
+        password_ = request.data['password']
+        organization_name_ = request.data.get('organization', None)
+
+        if not organization_name_:
+            return Response({"error": "Organization name is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_object_or_404(User, username=username_)
+        user_profile = user.profile
+
+        if not user.is_active or not user_profile.is_active or not user_profile.organization.is_active:
+            return Response({"error": "User, profile, or organization is inactive."}, status=status.HTTP_403_FORBIDDEN)
+
+        if user_profile.organization.name.lower() != organization_name_.lower():
+            return Response({"error": "User is not part of the given organization."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(password_):
+            logger.warning("Invalid password attempt for username: %s", username_)
             return Response({"detail": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         
         refresh_token = RefreshToken.for_user(user)
         access_token = str(refresh_token.access_token)
 
-        logger.info("Successful sign-in for username: %s", request.data['username'])
+        logger.info("Successful sign-in for username: %s", username_)
 
-        serializer = UserSerializer(user)
-        return Response({"user": serializer.data, "access token": access_token, "refresh_token": str(refresh_token)})
+        response = JsonResponse({
+            "user": UserSerializer(user).data,
+            "access-token": access_token,
+            "refresh-token": str(refresh_token)
+        })
+        logger.info("User Signed In and tokens generated for username: %s", user.username)
+        return response
+    
     except Exception as e:
-        logger.exception("Unexpected error during sign-in for username: %s. Error: %s", request.data.get('username'), str(e))
+        logger.exception("Unexpected error during sign-in for username: %s. Error: %s", username_, str(e))
         return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @api_view(['POST'])
@@ -94,7 +117,8 @@ def sign_in(request):
 def sign_out(request):
     logger.info("Received sign-out Request: %s", request.data)
     try:
-        refresh_token = request.data.get('refresh') 
+        user_ = request.user
+        '''refresh_token = request.data.get('refresh') 
         if not refresh_token:
             logger.warning("No refresh token provided for sign-out")
             return Response({"error": "Refresh token required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -106,14 +130,50 @@ def sign_out(request):
             return Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
         except AttributeError:
             logger.warning("Token blacklist is not enabled or token invalid")
-            return Response({"error": "Token blacklist not enabled or invalid token"}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({"error": "Token blacklist not enabled or invalid token"}, status=status.HTTP_400_BAD_REQUEST)'''
+        tokens = ExpiringToken.objects.filter(user=user_)
+        for token_ in tokens:
+            try:
+                BlacklistedToken.objects.get_or_create(token=token_)
+                logger.info("Blacklisted token for user ID: %s", user_.id)
+            except Exception as e:
+                logger.warning("Error blacklisting token for user ID: %s: %s", user_.id, str(e))
+                logger.error("Token blacklist failed for token %s: %s", token_.jti, str(e))
+        
+        response = Response({"message": "Logged out successfully, all tokens blacklisted."}, status=status.HTTP_200_OK)
+        response.delete_cookie('refresh-token')
+        return response
+    
     except TokenError as e:
         logger.warning("TokenError while blacklisting token: %s", str(e))
         return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
         logger.exception("Unexpected error during sign-out or username: %s. Error: %s", request.data.get('username'), str(e))
+        return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def refresh_token(request):
+    try:
+        refresh_token = request.data.get('refresh-token')
+
+        if not refresh_token:
+            return Response({"error": "No refresh token provided."}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        token = RefreshToken(refresh_token)
+        access_token = str(token.access_token)
+
+        response = JsonResponse({
+            "access-token": access_token,
+            "refresh-token": refresh_token
+        })
+        return response
+
+    except TokenError as e:
+        return Response({"error": "Invalid refresh token."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    except Exception as e:
         return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
@@ -133,7 +193,7 @@ def reset_password(request):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        reset_link = f"127.0.0.1:8000/auth/reset_password/{uid}/{token}"
+        reset_link = f"{settings.FRONTEND_URL}/auth/reset_password/{uid}/{token}"
 
         send_mail(
             subject = "CRM Password reset request",
@@ -168,6 +228,7 @@ def reset_password_confirmed(request, uidb64, token):
         tokens = OutstandingToken.objects.filter(user=user)
         for token in tokens:
             BlacklistedToken.objects.get_or_create(token=token)
+        ExpiringToken.objects.filter(user=user).delete()
 
         return Response({"message": "Password reset successful. All sessions logged out."}, status=status.HTTP_200_OK)
 

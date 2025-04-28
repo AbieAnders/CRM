@@ -4,11 +4,14 @@ from .models import UserProfile, Organization
 
 class UserSerializer(serializers.ModelSerializer):
     organization = serializers.CharField(write_only=True, required=True)
-    organization_name = serializers.CharField(source='profile.organization.name', read_only=True)
+    role = serializers.ChoiceField(choices=UserProfile.ROLE_CHOICES, write_only=True, default='member')
     
+    organization_name = serializers.CharField(source='profile.organization.name', read_only=True)
+    user_role = serializers.CharField(source='profile.role', read_only=True)
+
     class Meta(object):
         model = User
-        fields = ['id', 'username', 'password', 'email', 'organization', 'organization_name']
+        fields = ['id', 'organization', 'organization_name', 'username', 'email', 'role', 'user_role', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_email(self, value):
@@ -25,14 +28,16 @@ class UserSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         organization_name = validated_data.pop('organization')
-        organization = Organization.objects.filter(name__iexact=organization_name).first()
-
-        if not organization:
-            organization = Organization.objects.create(name=organization_name)
+        role = validated_data.pop('role', 'member')
+        
+        if role == 'owner':
+            organization, created = Organization.objects.get_or_create(name=organization_name)
+        else:
+            organization = Organization.objects.filter(name__iexact=organization_name).first()
+            if not organization:
+                raise serializers.ValidationError("Organization does not exist.")
 
         user = User.objects.create_user(**validated_data)
-        UserProfile.objects.create(user=user, organization=organization)
-        #user.profile.organization = organization
-        #user.profile.save()
+        UserProfile.objects.create(user=user, organization=organization, role=role)
 
         return user

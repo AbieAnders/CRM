@@ -8,8 +8,11 @@ import {
     Command,
     Frame,
     GalleryVerticalEnd,
+    Contact,
     Map,
+    LineChart,
     PieChart,
+    Settings,
     Settings2,
     SquareTerminal,
 } from "lucide-react"
@@ -59,24 +62,24 @@ const data = {
     mainContent: [
         {
             title: "Dashboard",
-            url: "#",
-            icon: SquareTerminal,
+            url: "http://localhost:5173/dashboard/",
+            icon: PieChart,
             isActive: true,
         },
         {
             title: "Customers",
-            url: "#",
-            icon: Bot,
+            url: "http://localhost:5173/customers/",
+            icon: Users,
         },
         {
             title: "Contacts",
-            url: "#",
-            icon: BookOpen,
+            url: "http://localhost:5173/contacts/",
+            icon: Contact,
         },
         {
             title: "Settings",
-            url: "#",
-            icon: Settings2,
+            url: "http://localhost:5173/settings/",
+            icon: Settings,
         },
     ],
 }
@@ -85,7 +88,7 @@ const SidebarComponent: React.FC<SidebarComponentProps> = (props) => {
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
-        const savedMode = localStorage.getItem('darkMode');
+        const savedMode = localStorage.getItem('dark-mode');
         if (savedMode === 'true') {
             setIsDarkMode(true);
             document.documentElement.classList.add('dark');
@@ -96,7 +99,7 @@ const SidebarComponent: React.FC<SidebarComponentProps> = (props) => {
         setIsDarkMode(prevState => {
             const newMode = !prevState;
             // Save the mode in localStorage for persistence across page reloads
-            localStorage.setItem('darkMode', newMode.toString());
+            localStorage.setItem('dark-mode', newMode.toString());
 
             if (newMode) {
                 document.documentElement.classList.add('dark');
@@ -124,20 +127,27 @@ const SidebarComponent: React.FC<SidebarComponentProps> = (props) => {
         </div>
     </header>*/
 
+    //maybe remove the reload from the dashboard link(its needed for when we are already in the dashboard)
     return (
         <Sidebar collapsible='icon' {...props}>
-            <SidebarHeader>
-                <Link to="/dashboard" className="font-bold text-primary hover:text-[#3ac285] dark:text-black dark:hover:text-white">Growth Eagle</Link>
+            <SidebarHeader className="dark:bg-[#3ac285]">
+                <Link
+                    to="/dashboard"
+                    className="font-bold text-primary hover:text-[#3ac285] dark:text-black dark:hover:text-white"
+                    onClick={() => window.location.reload()}
+                >
+                    Growth Eagle
+                </Link>
             </SidebarHeader>
 
-            <SidebarContent className="dark:bg-[#3ac285]">
+            <SidebarContent className="flex-1 overflow-y-auto dark:bg-[#3ac285]">
 
                 <SidebarContentComponent items={data.mainContent}></SidebarContentComponent>
 
 
             </SidebarContent>
 
-            <SidebarFooter className="mt-auto">
+            <SidebarFooter className="dark:bg-[#3ac285]">
                 <SidebarAccountComponent user={data.user}></SidebarAccountComponent>
             </SidebarFooter>
         </Sidebar>

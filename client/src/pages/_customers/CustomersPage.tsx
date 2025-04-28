@@ -1,15 +1,24 @@
 import React from 'react';
+import useFetchDB from '../../hooks/use-fetchdb';
+import { Logger } from '../../lib/utils';
+
 import SidebarComponent from '../../layout/sidebar/Sidebar';
 import { SidebarInset, SidebarProvider } from '../../components/ui/sidebar';
 import { SiteHeader } from '../../layout/header/SiteHeader';
 import { DataTable } from '../../components/data-table/DataTable';
-import useFetchDB from '../../hooks/use-fetchdb';
 
 const CustomerPageComponent: React.FC = () => {
     const { data, loading, error } = useFetchDB('customers');
+    Logger.info("Customer page rendered");
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) {
+        Logger.info("Loading customer page");
+        return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    }
+    if (error) {
+        Logger.info("Error in loading customer page", error);
+        return <div className="flex items-center justify-center h-screen">Error: {error}</div>;
+    }
     return (
         <>
             <SidebarProvider>

@@ -9,23 +9,26 @@ import { DataTable } from "../../pages/_dashboard/DataTable"
 import data from "./data.json"
 
 const DashboardPageComponent: React.FC = () => {
+    //h-screen and h-full are causing issues in larger displays
     return (
         <>
             <SidebarProvider>
-                <SidebarComponent variant="inset" />
-                <SidebarInset className="w-full md:w-[1920px] h-screen">
-                    <SiteHeader />
-                    <div className="flex flex-1 flex-col">
-                        <div className="@container/main flex flex-1 flex-col gap-2">
-                            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                                <SectionCards />
-                                <div className="px-4 lg:px-6">
-                                    <ChartAreaComponent />
+                <div className="flex w-screen h-screen overflow-auto">
+                    <SidebarComponent variant="inset" className="!static h-screen" />
+                    <SidebarInset className="flex flex-col flex-1 min-w-0 w-screen h-screen">
+                        <SiteHeader />
+                        <div className="flex-1 w-full h-full">
+                            <div className="@container/main mx-auto w-full flex flex-1 flex-col gap-2 p-4 md:p-6">
+                                <div className="flex flex-col gap-4 py-4 md:gap-6">
+                                    <SectionCards />
+                                    <div className="w-full">
+                                        <ChartAreaComponent />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </SidebarInset>
+                    </SidebarInset>
+                </div>
             </SidebarProvider>
         </>
     )

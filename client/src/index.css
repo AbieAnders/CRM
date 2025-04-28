@@ -4,13 +4,6 @@
 
 /* custom classes */
 
-html, body {
-  margin: 0;
-  padding:0;
-  height: auto;
-  min-height: 100%;
-}
-
 .text-stroke {
   -webkit-text-stroke: 1px green;
   color: transparent;
@@ -30,6 +23,7 @@ html, body {
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  /* -moz-osx-font-smoothing is not recognized by firefox */
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -74,6 +68,7 @@ button:hover {
 
 button:focus,
 button:focus-visible {
+  /* -webkit-focus-ring-color is not supported by firefox */
   outline: 4px auto -webkit-focus-ring-color;
 }
 

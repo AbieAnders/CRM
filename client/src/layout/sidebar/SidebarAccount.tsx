@@ -28,7 +28,7 @@ const SidebarAccountComponent: React.FC<SidebarAccountComponentProps> = ({ user 
         <SidebarMenu>
             <SidebarMenuItem>
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild className="hover:border-[#3ac285]">
                         <SidebarMenuButton
                             size="lg"
                             variant="outline"

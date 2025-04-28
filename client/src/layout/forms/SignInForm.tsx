@@ -1,29 +1,30 @@
-import { useState } from "react";
+import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import { cn, Logger } from "../../lib/utils";
+
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { cn } from "../../lib/utils";
 
 export function SignInFormComponent({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
     const [organization, setOrganization] = useState("");
     const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("")
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
 
-    const handleSignUp = async (e: React.FormEvent) => {
+    const navigate = useNavigate();
+
+    const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
-
         const payload = {
             organization,
             username,
             email,
             password,
         };
-
         try {
-            const response = await fetch("http://127.0.0.1:8000/auth/sign-in/", {
+            const response = await fetch("http://127.0.0.1:8000/auth/sign-in/", { //change the endpoint for production
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -34,15 +35,13 @@ export function SignInFormComponent({ className, ...props }: React.ComponentProp
             if (!response.ok) {
                 throw new Error("Invalid credentials");
             }
-
             const data = await response.json();
-            localStorage.setItem("access", data.access);
-            localStorage.setItem("refresh", data.acess);
-            window.location.href = "/dashboard";
+            sessionStorage.setItem("access", data["access-token"]);
+            sessionStorage.setItem("refresh", data["refresh-token"]);
+            navigate("/dashboard");
         }
         catch (error) {
-            console.error(error);
-            setError("Login failed. Revise your credientials");
+            Logger.error("Error Signing in", error);
         }
     };
 
@@ -54,7 +53,7 @@ export function SignInFormComponent({ className, ...props }: React.ComponentProp
                     <CardDescription>Enter your credentials</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSignUp} className="w-full">
+                    <form onSubmit={handleSignIn} className="w-full">
                         <div className="flex flex-col gap-2">
                             <div className="grid gap-2">
                                 <Label htmlFor="organization" className="block text-left text-sm">Organization</Label>

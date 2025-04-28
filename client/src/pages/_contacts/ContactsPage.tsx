@@ -4,24 +4,34 @@ import { SidebarInset, SidebarProvider } from '../../components/ui/sidebar';
 import { SiteHeader } from '../../layout/header/SiteHeader';
 import { DataTable } from '../../components/data-table/DataTable';
 import useFetchDB from '../../hooks/use-fetchdb';
+import { Logger } from '../../lib/utils';
 
 const ContactsPageComponent: React.FC = () => {
     const { data, loading, error } = useFetchDB('contacts/');
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) {
+        Logger.info("Loading contacts page");
+        return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    }
+    if (error) {
+        Logger.info("Error in loading contacts page", error);
+        return <div className="flex items-center justify-center h-screen">Error: {error}</div>;
+    }
     return (
         <>
             <SidebarProvider>
-                <SidebarComponent variant="inset" />
-                <SidebarInset className="w-full min-w-[1300px] h-screen overflow-auto">
-                    <SiteHeader />
+                <div className="flex h-screen overflow-hidden">
+                    <SidebarComponent variant="inset" />
+                    <SidebarInset className="flex flex-col flex-1 overflow-y-auto">
+                        <SiteHeader />
 
-                    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                        <DataTable data={data} />
-                    </div>
+                        <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+                            <DataTable data={data} />
+                        </div>
 
-                </SidebarInset>
+                    </SidebarInset>
+
+                </div>
             </SidebarProvider>
         </>
     )

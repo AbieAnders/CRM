@@ -37,24 +37,22 @@ type SidebarContentComponentProps = {
 
 const SidebarContentComponent: React.FC<SidebarContentComponentProps> = ({ items }) => {
     const [collapsed, setCollapsed] = useState(false)
-
-    // Toggle the collapsed state when sidebar is clicked
     const toggleSidebar = () => setCollapsed(!collapsed)
-
+    //collapsed is useless right now
     return (
-        <SidebarGroup>
-            <SidebarGroupContent className="flex flex-col gap-2">
-                <SidebarMenu>
+        <SidebarGroup className="w-full">
+            <SidebarGroupContent className="flex flex-col gap-2 w-full">
+                <SidebarMenu className="w-full">
                     {items.map((item) => (
-                        <SidebarMenuItem key={item.title} className="gap-3 py-2">
+                        <SidebarMenuItem key={item.title} className="gap-3 py-2 w-full">
                             <SidebarMenuButton asChild tooltip={item.title}>
                                 <a
                                     href={item.url}
-                                    className={`flex items-center p-2 rounded-md transition-all group ${collapsed ? "justify-center w-10 h-10" : "gap-3 w-full"}`}
+                                    className={`flex items-center p-2 rounded-md transition-all group hover:bg-black dark:hover:bg-[#2a9d8f] ${collapsed ? "justify-center w-10 h-10" : "w-full gap-3"}`}
                                 >
-                                    {item.icon && <item.icon className={`w-5 h-5 text-black dark:text-white transition-all ${collapsed ? "" : "mr-2"}`} />}
+                                    {item.icon && <item.icon className={`w-5 h-5 text-black transition-all ${collapsed ? "" : "mr-2"}`} />}
                                     {!collapsed && (
-                                        <span className="text-black font-semibold text-base transition-colors">
+                                        <span className="text-primary font-semibold text-black hover:text-[#3ac285] dark:text-black dark:hover:text-[#3ac285] transition-colors truncate">
                                             {item.title}
                                         </span>
                                     )}
