@@ -1,4 +1,5 @@
 import axios from 'axios';
+import jwt_decode from 'jwt-decode';
 import { store } from '../store/store';
 import { setAccessToken } from '../store/authSlice';
 import { Logger } from '../lib/utils';

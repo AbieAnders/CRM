@@ -21,6 +21,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework_simplejwt.exceptions import TokenError
+from server.decorators import log_execution_time
 
 import os
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
@@ -34,12 +35,22 @@ logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 @csrf_exempt
+@log_execution_time
 @authentication_classes([])  #Disables auth for sign-up endpoint
 @permission_classes([AllowAny])  #Allows any user to sign-up
 def sign_up(request):
     logger.info("Received Sign-Up Request: %s", request.data)
-    serializer = UserSerializer(data=request.data)
     try:
+        username = request.data.get('username')
+        email = request.data.get('email')
+
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             refresh_token = RefreshToken.for_user(user)
@@ -69,10 +80,11 @@ def sign_up(request):
         return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
+@log_execution_time
 @authentication_classes([])
 @permission_classes([AllowAny])
 def sign_in(request):
-    logger.info("Received Sign-In Request: %s", request.data)
+    #logger.info("Received Sign-In Request: %s", request.data)
     try:
         username_ = request.data['username']
         password_ = request.data['password']
@@ -91,20 +103,20 @@ def sign_in(request):
             return Response({"error": "User is not part of the given organization."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not user.check_password(password_):
-            logger.warning("Invalid password attempt for username: %s", username_)
+            #logger.warning("Invalid password attempt for username: %s", username_)
             return Response({"detail": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         
         refresh_token = RefreshToken.for_user(user)
         access_token = str(refresh_token.access_token)
 
-        logger.info("Successful sign-in for username: %s", username_)
+        #logger.info("Successful sign-in for username: %s", username_)
 
         response = JsonResponse({
             "user": UserSerializer(user).data,
             "access-token": access_token,
             "refresh-token": str(refresh_token)
         })
-        logger.info("User Signed In and tokens generated for username: %s", user.username)
+        #logger.info("User Signed In and tokens generated for username: %s", user.username)
         return response
     
     except Exception as e:
@@ -112,6 +124,7 @@ def sign_in(request):
         return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @api_view(['POST'])
+@log_execution_time
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def sign_out(request):
@@ -152,7 +165,9 @@ def sign_out(request):
         logger.exception("Unexpected error during sign-out or username: %s. Error: %s", request.data.get('username'), str(e))
         return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+'''
 @api_view(['POST'])
+@log_execution_time
 @permission_classes([AllowAny])
 def refresh_token(request):
     try:
@@ -174,9 +189,10 @@ def refresh_token(request):
         return Response({"error": "Invalid refresh token."}, status=status.HTTP_401_UNAUTHORIZED)
 
     except Exception as e:
-        return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)'''
 
 @api_view(['POST'])
+@log_execution_time
 @permission_classes([AllowAny])
 def reset_password(request):
     try:
@@ -209,6 +225,7 @@ def reset_password(request):
         return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
+@log_execution_time
 @permission_classes([AllowAny])
 def reset_password_confirmed(request, uidb64, token):
     try:

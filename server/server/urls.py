@@ -24,17 +24,3 @@ urlpatterns = [
     path('contacts/', include('contacts_.urls'))
     #path('sign_in/', include('auth.views'))
 ]
-
-'''
-from django.urls import URLPattern, URLResolver, get_resolver
-
-def list_urls(urlpatterns, prefix=''):
-    for pattern in urlpatterns:
-        if isinstance(pattern, URLPattern):  # Simple path
-            print(prefix + str(pattern.pattern))
-        elif isinstance(pattern, URLResolver):  # Included URLs
-            list_urls(pattern.url_patterns, prefix + str(pattern.pattern))
-
-# Call it on startup
-list_urls(get_resolver().url_patterns)
-'''

@@ -12,6 +12,7 @@ export function SignInFormComponent({ className, ...props }: React.ComponentProp
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     const navigate = useNavigate();
 
@@ -41,6 +42,7 @@ export function SignInFormComponent({ className, ...props }: React.ComponentProp
             navigate("/dashboard");
         }
         catch (error) {
+            setErrorMessage("Invalid credentials or error occurred. Please try again.");
             Logger.error("Error Signing in", error);
         }
     };
@@ -99,13 +101,18 @@ export function SignInFormComponent({ className, ...props }: React.ComponentProp
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="all silver tea cups"
+                                    placeholder="password"
                                     required
                                     className="hover:border-[#3ac285]"
                                 />
                             </div>
                             <Button type="submit" className="w-full hover:border-green-600 dark:bg-[#3ac285] dark:hover:bg-[#32a16d] transition-colors">Sign In</Button>
                         </div>
+                        {errorMessage && (
+                            <div className="mt-4 text-center text-red-500">
+                                {errorMessage}
+                            </div>
+                        )}
                         <div className="mt-4 text-center text-sm">
                             <span>Don't have an account? </span>
                             <a href="/auth/sign-up" className="text-blue-500 hover:text-[#3ac285]">Sign up</a>

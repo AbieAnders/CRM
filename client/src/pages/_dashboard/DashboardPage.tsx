@@ -4,9 +4,6 @@ import { SiteHeader } from "../../layout/header/SiteHeader"
 
 import ChartAreaComponent from "../../pages/_dashboard/ChartArea"
 import { SectionCards } from "../../pages/_dashboard/SectionCards"
-import { DataTable } from "../../pages/_dashboard/DataTable"
-
-import data from "./data.json"
 
 const DashboardPageComponent: React.FC = () => {
     //h-screen and h-full are causing issues in larger displays

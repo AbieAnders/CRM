@@ -1,13 +1,5 @@
-import React, { useState } from 'react';
-
-import NavbarComponent from '../../layout/sidebar/Sidebar';
-import { SignUpFormComponent } from '../../layout/forms/SignInForm';
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Label } from "../../components/ui/label";
-import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
-import { SidebarProvider } from '../../components/ui/sidebar';
+import React from 'react';
+import { SignUpFormComponent } from '../../layout/forms/SignUpForm';
 
 const SignUpComponent: React.FC = () => {
     return (

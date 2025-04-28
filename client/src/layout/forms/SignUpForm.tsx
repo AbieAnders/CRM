@@ -11,8 +11,8 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
     const [organization, setOrganization] = useState("");
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
-    const [role, setRole] = useState("");
     const [password, setPassword] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             password,
         };
         try {
-            const response = await fetch("http://127.0.0.1:8000/auth/sign-up/", { //change the endpoint for production
+            const response = await fetch("http://127.0.0.1:8000/auth/sign-in/", { //change the endpoint for production
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -34,7 +34,7 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             });
 
             if (!response.ok) {
-                throw new Error("Invalid input values");
+                throw new Error("Invalid credentials");
             }
             const data = await response.json();
             sessionStorage.setItem("access", data["access-token"]);
@@ -42,6 +42,7 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             navigate("/dashboard");
         }
         catch (error) {
+            setErrorMessage("Invalid credentials or error occurred. Please try again.");
             Logger.error("Error Signing in", error);
         }
     };
@@ -107,6 +108,11 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
                             </div>
                             <Button type="submit" className="w-full hover:border-green-600 dark:bg-[#3ac285] dark:hover:bg-[#32a16d] transition-colors">Sign In</Button>
                         </div>
+                        {errorMessage && (
+                            <div className="mt-4 text-center text-red-500">
+                                {errorMessage}
+                            </div>
+                        )}
                         <div className="mt-4 text-center text-sm">
                             <span>Don't have an account? </span>
                             <a href="/auth/sign-up" className="text-blue-500 hover:text-[#3ac285]">Sign up</a>

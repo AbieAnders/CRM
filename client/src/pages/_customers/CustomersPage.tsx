@@ -6,14 +6,20 @@ import SidebarComponent from '../../layout/sidebar/Sidebar';
 import { SidebarInset, SidebarProvider } from '../../components/ui/sidebar';
 import { SiteHeader } from '../../layout/header/SiteHeader';
 import { DataTable } from '../../components/data-table/DataTable';
+import { ClipLoader } from 'react-spinners';
 
 const CustomerPageComponent: React.FC = () => {
     const { data, loading, error } = useFetchDB('customers');
-    Logger.info("Customer page rendered");
+    //Logger.info("Customer page rendered");
 
     if (loading) {
-        Logger.info("Loading customer page");
-        return <div className="flex items-center justify-center h-screen">Loading...</div>;
+        //Logger.info("Loading customer page");
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <ClipLoader size={15} color="#3ac285" />
+                <span className="ml-2">Loading...</span>
+            </div>
+        );
     }
     if (error) {
         Logger.info("Error in loading customer page", error);
