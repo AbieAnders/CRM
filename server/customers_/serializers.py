@@ -5,7 +5,6 @@ from .models import Customer
 class CustomerSerializer(serializers.ModelSerializer):
     #user = UserSerializer(read_only=True)
     organization_name = serializers.CharField(source='organization.org_name', read_only=True)
-    
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
@@ -27,4 +26,4 @@ class CustomerSerializer(serializers.ModelSerializer):
 
             'employee_count', 'market_cap',
         ]
-        read_only_fields = ['user_id', 'username', 'email', 'organization_name', 'created_at']
+        read_only_fields = ['organization_name', 'user_id', 'username', 'email', 'created_at']

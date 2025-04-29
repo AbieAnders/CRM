@@ -9,8 +9,12 @@ import { DataTable } from '../../components/data-table/DataTable';
 import { ClipLoader } from 'react-spinners';
 
 const CustomerPageComponent: React.FC = () => {
-    const { data, loading, error } = useFetchDB('customers');
+    const { data, loading, error } = useFetchDB('customers/');
     //Logger.info("Customer page rendered");
+    const org_name = sessionStorage.getItem("organization")!;
+    const user_name = sessionStorage.getItem("username")!;
+
+    Logger.info("User: ", org_name, user_name);
 
     if (loading) {
         //Logger.info("Loading customer page");
@@ -33,17 +37,17 @@ const CustomerPageComponent: React.FC = () => {
                     <SiteHeader />
                     <div className="flex flex-1 flex-col">
                         <div className="@container/main flex flex-1 flex-col gap-2">
-                            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                                <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                                    <DataTable data={data} />
-                                </div>
+
+                            <div className="flex flex-col gap-4 py-4 px-4 md:gap-6 md:py-6 md:px-6">
+                                <DataTable data={data} org_name={org_name} user_name={user_name} />
                             </div>
+
                         </div>
                     </div>
                 </SidebarInset>
             </SidebarProvider>
         </>
-    )
-}
+    );
+};
 
 export default CustomerPageComponent;

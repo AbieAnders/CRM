@@ -71,6 +71,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 
 import { saveAs } from 'file-saver'
+import useFetchDB from "../../hooks/use-fetchdb"
+import { Logger } from "../../lib/utils"
 
 
 function exportToCSV(data: any[], filename: string) {
@@ -91,11 +93,9 @@ function exportToJSON(data: any[], filename: string) {
 }
 
 const customerRequired = z.object({
-    organization_name: z.string(),
-
-    user_id: z.number(),
-    username: z.string(),
-    email: z.string(),
+    organization_name: z.string().min(1, "Organization name required"),
+    user_name: z.string().min(1, "Username required"),
+    //email: z.string(),
     id: z.number(),
 })
 
@@ -591,11 +591,12 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof customerSchema>> }) {
                     <DropdownMenuItem onClick={handleCopy}>Make a copy</DropdownMenuItem>
                     <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>*/
 
-function DataTableInternal({
-    data: initialData,
-}: {
-    data: z.infer<typeof customerSchema>[]
-}) {
+function DataTableInternal({ data: initialData, org_name, user_name }:
+    {
+        data: z.infer<typeof customerSchema>[];
+        org_name: string;
+        user_name: string;
+    }) {
     const [data, setData] = React.useState(() => initialData)
 
     const [rowSelection, setRowSelection] = React.useState({})
@@ -666,10 +667,25 @@ function DataTableInternal({
         const maxId = Math.max(...data.map((d) => d.id))
         return maxId + 1
     }
+    const handleAddCustomer = () => {
+        setData((cust) => {
+            const nextId = getNextId(cust);
+
+            const newCustomer = customerSchema.parse({
+                id: nextId,
+                organization_name: org_name,
+                username: user_name,
+                ...customerDefault.parse({})
+            });
+
+            return [newCustomer, ...cust];
+        });
+    };
 
     return (
-        <Tabs defaultValue="outline" className="flex w-full flex-col justify-start gap-6">
-            <div className="flex items-center justify-between px-4 lg:px-6">
+        <>
+            {/* Toolbar */}
+            <div className="flex items-center justify-between">
                 <Input
                     placeholder="Search..."
                     value={globalFilter ?? ""}
@@ -731,153 +747,152 @@ function DataTableInternal({
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Button variant="outline" size="sm" onClick={() => setData((prev) => [
-                        customerSchema.parse({
-                            organization_name: data[0].organization_name,
-                            user_id: data[0].user_id,
-                            username: data[0].username,
-                            email: data[0].email,
-                            id: getNextId(prev),
-                            ...customerDefault.parse({})
-                        }), ...prev])}
-                    >
+                    <Button variant="outline" size="sm" onClick={handleAddCustomer}>
                         <PlusIcon />
                         <span className="hidden lg:inline">Add Customer</span>
                     </Button>
 
                 </div>
             </div>
-            <TabsContent value="outline" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
-                <div className="overflow-hidden rounded-lg border">
-                    <DndContext
-                        collisionDetection={closestCenter}
-                        modifiers={[restrictToVerticalAxis]}
-                        onDragEnd={handleDragEnd}
-                        sensors={sensors}
-                        id={sortableId}
-                    >
-                        <Table className="table-fixed w-full">
-                            <TableHeader className="sticky top-0 z-10 bg-muted">
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <TableRow key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => {
-                                            const width = header.getSize()
-                                            return (
-                                                <TableHead key={header.id} colSpan={header.colSpan} style={{ width: width }} className={`text-center min-w-[${width}px] max-w-[${width}px] whitespace-nowrap`}>
-                                                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                                </TableHead>
-                                            )
-                                        })}
-                                    </TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                                {table.getRowModel().rows?.length ? (
-                                    <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-                                        {table.getRowModel().rows.map((row) => (
-                                            <DraggableRow key={row.id} row={row} />
-                                        ))}
-                                    </SortableContext>
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-24 text-center">
-                                            No results
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </DndContext>
-                </div>
 
-                <div className="flex items-center justify-between px-4">
-                    <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-                        {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s)
-                        selected.
-                    </div>
-                    <div className="flex w-full items-center gap-8 lg:w-fit">
-                        <div className="hidden items-center gap-2 lg:flex">
-                            <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                                Rows per page
-                            </Label>
-                            <Select
-                                value={`${table.getState().pagination.pageSize}`}
-                                onValueChange={(value) => {
-                                    table.setPageSize(Number(value))
-                                }}
-                            >
-                                <SelectTrigger className="w-20" id="rows-per-page">
-                                    <SelectValue placeholder={table.getState().pagination.pageSize} />
-                                </SelectTrigger>
-                                <SelectContent side="top">
-                                    {[10, 20, 30, 40, 50].map((pageSize) => (
-                                        <SelectItem key={pageSize} value={`${pageSize}`}>
-                                            {pageSize}
-                                        </SelectItem>
+            {/* Table */}
+            <Tabs defaultValue="outline" className="flex w-full flex-col justify-start gap-6">
+                <TabsContent value="outline" className="relative flex flex-col gap-4 overflow-auto py-4">
+                    <div className="overflow-hidden rounded-lg border">
+                        <DndContext
+                            collisionDetection={closestCenter}
+                            modifiers={[restrictToVerticalAxis]}
+                            onDragEnd={handleDragEnd}
+                            sensors={sensors}
+                            id={sortableId}
+                        >
+                            <Table className="table-fixed w-full">
+                                <TableHeader className="sticky top-0 z-10 bg-muted">
+                                    {table.getHeaderGroups().map((headerGroup) => (
+                                        <TableRow key={headerGroup.id}>
+                                            {headerGroup.headers.map((header) => {
+                                                const width = header.getSize()
+                                                return (
+                                                    <TableHead key={header.id} colSpan={header.colSpan} style={{ width: width }} className={`text-center min-w-[${width}px] max-w-[${width}px] whitespace-nowrap`}>
+                                                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                                    </TableHead>
+                                                )
+                                            })}
+                                        </TableRow>
                                     ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex w-fit items-center justify-center text-sm font-medium">
-                            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                        </div>
-                        <div className="ml-auto flex items-center gap-2 lg:ml-0">
-                            <Button
-                                variant="outline"
-                                className="hidden h-8 w-8 p-0 lg:flex"
-                                onClick={() => table.setPageIndex(0)}
-                                disabled={!table.getCanPreviousPage()}
-                            >
-                                <span className="sr-only">Go to first page</span>
-                                <ChevronsLeftIcon />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="size-8"
-                                size="icon"
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
-                            >
-                                <span className="sr-only">Go to previous page</span>
-                                <ChevronLeftIcon />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="size-8"
-                                size="icon"
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                            >
-                                <span className="sr-only">Go to next page</span>
-                                <ChevronRightIcon />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="hidden size-8 lg:flex"
-                                size="icon"
-                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                disabled={!table.getCanNextPage()}
-                            >
-                                <span className="sr-only">Go to last page</span>
-                                <ChevronsRightIcon />
-                            </Button>
-                        </div>
+                                </TableHeader>
+                                <TableBody className="**:data-[slot=table-cell]:first:w-8">
+                                    {table.getRowModel().rows?.length ? (
+                                        <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
+                                            {table.getRowModel().rows.map((row) => (
+                                                <DraggableRow key={row.id} row={row} />
+                                            ))}
+                                        </SortableContext>
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={columns.length} className="h-24 text-center">
+                                                No results
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </DndContext>
+                    </div>
+                </TabsContent>
+            </Tabs>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between">
+                <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
+                    {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s)
+                    selected.
+                </div>
+                <div className="flex w-full items-center gap-8 lg:w-fit">
+                    <div className="hidden items-center gap-2 lg:flex">
+                        <Label htmlFor="rows-per-page" className="text-sm font-medium">
+                            Rows per page
+                        </Label>
+                        <Select
+                            value={`${table.getState().pagination.pageSize}`}
+                            onValueChange={(value) => {
+                                table.setPageSize(Number(value))
+                            }}
+                        >
+                            <SelectTrigger className="w-20" id="rows-per-page">
+                                <SelectValue placeholder={table.getState().pagination.pageSize} />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[10, 20, 30, 40, 50].map((pageSize) => (
+                                    <SelectItem key={pageSize} value={`${pageSize}`}>
+                                        {pageSize}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex w-fit items-center justify-center text-sm font-medium">
+                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                    </div>
+                    <div className="ml-auto flex items-center gap-2 lg:ml-0">
+                        <Button
+                            variant="outline"
+                            className="hidden h-8 w-8 p-0 lg:flex"
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            <span className="sr-only">Go to first page</span>
+                            <ChevronsLeftIcon />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="size-8"
+                            size="icon"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            <span className="sr-only">Go to previous page</span>
+                            <ChevronLeftIcon />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="size-8"
+                            size="icon"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            <span className="sr-only">Go to next page</span>
+                            <ChevronRightIcon />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="hidden size-8 lg:flex"
+                            size="icon"
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            <span className="sr-only">Go to last page</span>
+                            <ChevronsRightIcon />
+                        </Button>
                     </div>
                 </div>
-            </TabsContent>
+            </div>
+        </>
+    );
+};
 
-        </Tabs>
-    )
-}
+type DataTableProps = {
+    endpoint: string;
+};
 
-export function DataTable() {
-    const [data, setData] = React.useState<z.infer<typeof customerSchema>[]>([])
+export function DataTable({ endpoint }: DataTableProps) {
+    /*const [data, setData] = React.useState<z.infer<typeof customerSchema>[]>([])
     const [loading, setLoading] = React.useState(true)
 
     React.useEffect(() => {
         async function fetchData() {
-            let accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1MTUyMTM0LCJpYXQiOjE3NDUxNTAzMzQsImp0aSI6IjhiYWRkODdmNGNjNDRkMDM4Yjc3MGE0OGNlNzg0YzlkIiwidXNlcl9pZCI6MX0.zNc9ep8A3YeC-wy1CTIvsalHWOZHRzu09SCmGxYCCI8"
-            const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0NDk4NDAxMywiaWF0IjoxNzQ0ODk3NjEzLCJqdGkiOiJjZTY1YzZhM2M4MTU0N2U0YWZmMWRmZTNmN2YzZDExNiIsInVzZXJfaWQiOjF9.b59njd-aLqp2VVQ2n81f8PLnT9vzfOjrR5iz2CXkHaw"
+            let accessToken = sessionStorage.getItem("access");
+            const refreshToken = sessionStorage.getItem("refresh")
             try {
                 const res = await fetch("http://127.0.0.1:8000/customers/", {
                     headers: {
@@ -900,13 +915,21 @@ export function DataTable() {
         }
 
         fetchData()
-    }, [])
+    }, [])*/
+    const org_name = sessionStorage.getItem("organization")!;
+    const user_name = sessionStorage.getItem("username")!;
+
+    const { data, loading, error } = useFetchDB(endpoint);
 
     if (loading) {
         return <div className="p-6">Fetching your data...</div>
     }
 
+    if (error) {
+        return <div className="p-6 text-red-500">{error}</div>
+    }
+
     return (
-        <DataTableInternal data={data} />
-    )
-}
+        <DataTableInternal data={data} org_name={org_name} user_name={user_name} />
+    );
+};

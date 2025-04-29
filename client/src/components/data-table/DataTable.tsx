@@ -73,12 +73,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { exportToCSV, exportToJSON } from '../../lib/exportcustomers'
 
 const customerRequired = z.object({
-    organization_name: z.string(),
-
-    user_id: z.number(),
-    username: z.string(),
-    email: z.string(),
-    id: z.number()
+    organization_name: z.string().min(1, "Organization name required"),
+    user_name: z.string().min(1, "Username required"),
+    //email: z.string(),
+    id: z.number(),
 })
 
 const customerDefault = z.object({
@@ -854,8 +852,14 @@ function DragableRow({ row }: { row: Row<z.infer<typeof customerSchema>> }) {
 }*/
 
 import { saveDB } from "../../lib/handlesavedb"
+import { Logger } from "../../lib/utils"
 
-export function DataTable({ data: initialData }: { data: CustomerWithMeta[] }) {
+export function DataTable({ data: initialData, org_name, user_name }:
+    {
+        data: CustomerWithMeta[],
+        org_name: string;
+        user_name: string;
+    }) {
     const originalDataRef = React.useRef(initialData);
     const [editedRowIds, setEditedRowIds] = React.useState<Set<number>>(new Set())
     const [deletedRowIds, setDeletedRowIds] = React.useState<Set<number>>(new Set());
@@ -943,18 +947,38 @@ export function DataTable({ data: initialData }: { data: CustomerWithMeta[] }) {
         try {
             const changedRows = data.filter(row => editedRowIds.has(row.id))
             const deletedIdsArray = Array.from(deletedRowIds);
-            await Promise.all(changedRows.map(({ isNewRow, ...cleanRow }) => saveDB(cleanRow.id, cleanRow, 'patch')));
 
-            await Promise.all(deletedIdsArray.map(id => saveDB(Number(id), {}, 'delete')));
+            const createRows = changedRows.filter(row => row.isNewRow);
+            const updateRows = changedRows.filter(row => !row.isNewRow);
+
+            await Promise.all([
+                ...createRows.map(row => {
+                    const { isNewRow, id, ...cleanRow } = row;
+                    return saveDB(null, cleanRow, 'post');
+                }),
+                ...updateRows.map(row => {
+                    const { isNewRow, ...cleanRow } = row;
+                    return saveDB(cleanRow.id, cleanRow, 'patch');
+                }),
+                ...deletedIdsArray.map(id => saveDB(Number(id), {}, 'delete'))
+            ]);
+
+            /*await Promise.all(changedRows.map(({ isNewRow, ...cleanRow }) =>
+                saveDB(cleanRow.id, cleanRow, 'patch')
+            ));
+
+            await Promise.all(deletedIdsArray.map(id =>
+                saveDB(Number(id), {}, 'delete')
+            ));*/
 
             originalDataRef.current = data;
             setEditedRowIds(new Set());
             setDeletedRowIds(new Set());
 
             alert("Changes saved successfully!")
-        } catch (error) {
-            console.error("Save error:", error)
-            alert("Failed to save changes.")
+        } catch (error: any) {
+            Logger.error("Save error:", error)
+            alert("Failed to save changes\n" + error.message);
         }
     }, [data, editedRowIds, deletedRowIds]);
 
@@ -1050,11 +1074,11 @@ export function DataTable({ data: initialData }: { data: CustomerWithMeta[] }) {
                         className="sm"
                         onClick={() => {
                             const newRowWithoutMeta = customerSchema.parse({
-                                organization_name: data[0].organization_name,
-                                user_id: data[0].user_id,
-                                username: data[0].username,
-                                email: data[0].email,
                                 id: getNextId(data),
+                                organization_name: org_name,
+                                //user_id: data[0].user_id,
+                                user_name: user_name,
+                                //email: data[0].email,
                                 ...customerDefault.parse({})
                             });
 

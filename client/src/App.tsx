@@ -15,7 +15,7 @@ import CustomerPageComponent from './pages/_customers/CustomersPage.tsx';
 
 import ContactsPageComponent from './pages/_contacts/ContactsPage.tsx';
 
-import SettingsPageComponent from './pages/_contacts/SettingsPage.tsx';
+import OrgPageComponent from './pages/_org/OrgPage.tsx';
 
 const App: React.FC = () => {
   return (
@@ -65,7 +65,11 @@ const App: React.FC = () => {
 
           <Route
             path="/settings"
-            element={<ForgotPasswordComponent />} //come back to this later
+            element={
+              <ProtectedRouteComponent>
+                <OrgPageComponent />
+              </ProtectedRouteComponent>
+            } //come back to this later
           />
 
         </Routes>

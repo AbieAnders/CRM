@@ -37,8 +37,15 @@ export function SignInFormComponent({ className, ...props }: React.ComponentProp
                 throw new Error("Invalid credentials");
             }
             const data = await response.json();
+
+            //tokens
             sessionStorage.setItem("access", data["access-token"]);
             sessionStorage.setItem("refresh", data["refresh-token"]);
+
+            //org data for tables
+            sessionStorage.setItem("organization", organization);
+            sessionStorage.setItem("username", username);
+
             navigate("/dashboard");
         }
         catch (error) {

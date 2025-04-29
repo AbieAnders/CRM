@@ -62,23 +62,23 @@ const data = {
     mainContent: [
         {
             title: "Dashboard",
-            url: "http://localhost:5173/dashboard/",
+            url: "/dashboard",
             icon: PieChart,
             isActive: true,
         },
         {
             title: "Customers",
-            url: "http://localhost:5173/customers/",
+            url: "/customers",
             icon: Users,
         },
         {
             title: "Contacts",
-            url: "http://localhost:5173/contacts/",
+            url: "/contacts",
             icon: Contact,
         },
         {
             title: "Settings",
-            url: "http://localhost:5173/settings/",
+            url: "/settings",
             icon: Settings,
         },
     ],
@@ -134,7 +134,6 @@ const SidebarComponent: React.FC<SidebarComponentProps> = (props) => {
                 <Link
                     to="/dashboard"
                     className="font-bold text-primary hover:text-[#3ac285] dark:text-black dark:hover:text-white"
-                    onClick={() => window.location.reload()}
                 >
                     Growth Eagle
                 </Link>

@@ -23,6 +23,7 @@ import {
     useSidebar,
 } from "../../components/ui/sidebar"
 import { useState } from "react"
+import { Link } from "react-router-dom"
 
 type SidebarItem = {
     title: string
@@ -46,8 +47,8 @@ const SidebarContentComponent: React.FC<SidebarContentComponentProps> = ({ items
                     {items.map((item) => (
                         <SidebarMenuItem key={item.title} className="gap-3 py-2 w-full">
                             <SidebarMenuButton asChild tooltip={item.title}>
-                                <a
-                                    href={item.url}
+                                <Link
+                                    to={item.url}
                                     className={`flex items-center p-2 rounded-md transition-all group hover:bg-black dark:hover:bg-[#2a9d8f] ${collapsed ? "justify-center w-10 h-10" : "w-full gap-3"}`}
                                 >
                                     {item.icon && <item.icon className={`w-5 h-5 text-black transition-all ${collapsed ? "" : "mr-2"}`} />}
@@ -56,7 +57,7 @@ const SidebarContentComponent: React.FC<SidebarContentComponentProps> = ({ items
                                             {item.title}
                                         </span>
                                     )}
-                                </a>
+                                </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}

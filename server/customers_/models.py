@@ -31,9 +31,9 @@ class Customer(models.Model):
     sales_owner = models.CharField(max_length=30)  #setup collection of sales owners later
     contact_designation = models.CharField(max_length=10)
     contact_gender = models.CharField(max_length=1,choices=GENDERS, blank=True)
-    contact_branch = models.CharField(max_length=20, blank=True)  #company contacts branch
+    contact_branch = models.CharField(max_length=20, blank=True, null=True)  #company contacts branch
     
-    branch_address = models.TextField(max_length=255, blank=True)
+    branch_address = models.TextField(max_length=255, blank=True, null=True)
     company_branches = models.JSONField(blank=True, null=True)  #cities of companys branches
     #branches = models.TextField(blank=True)
 
@@ -41,9 +41,10 @@ class Customer(models.Model):
         max_length=10, #longest is 8 for 'rejected'
         choices=LIFECYCLE_STAGES,
         #default='lead',
-        blank=True
+        blank=True,
+        null=True
     )
-    loss_reason = models.TextField(blank=True)
+    loss_reason = models.TextField(blank=True, null=True)
 
     last_contact_date = models.DateField(blank=True, null=True)
     contacted_by = models.CharField(max_length=30,blank=True)
