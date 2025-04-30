@@ -1,31 +1,91 @@
-import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from "react-router-dom";
 import { cn, Logger } from "../../lib/utils";
 
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Check, ChevronsUpDown, Command, Eye, EyeOff } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
+import { CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../components/ui/command';
 
 export function SignUpFormComponent({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
     const [organization, setOrganization] = useState("");
+    const [orgExists, setOrgExists] = useState(false);
+    const [organizations, setOrganizations] = useState<string[]>([]);
+    
+    const [role, setRole] = useState("");
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
+    
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    
+    const [open, setOpen] = React.useState(false)
     const [errorMessage, setErrorMessage] = useState("");
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetch("http://127.0.0.1:8000/auth/organizations", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setOrganizations(data);
+            })
+            .catch((err) => {
+                Logger.error("Error fetching organizations", err);
+                setOrganizations([]);
+            });
+    }, []);
+
+    useEffect(() => {
+        if (organization.trim() !== "") {
+            const exists = organizations.some((org) => org.toLowerCase() === organization.toLowerCase());
+            setOrgExists(exists);
+        } else {
+            setOrgExists(false);
+        }
+    }, [organization, organizations]);
+
+    /*
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (organization.trim() !== "") {
+                fetch(`http://127.0.0.1:8000/organizations/check-exists?name=${encodeURIComponent(organization)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        setOrgExists(data.exists);
+                    })
+                    .catch(err => {
+                        Logger.error("Error checking organization existence", err);
+                        setOrgExists(false);
+                    });
+            } else {
+                setOrgExists(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [organization]);*/
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         const payload = {
             organization,
+            role,
             username,
             email,
             password,
         };
         try {
-            const response = await fetch("http://127.0.0.1:8000/auth/sign-in/", { //change the endpoint for production
+            const response = await fetch("http://127.0.0.1:8000/auth/sign-up/", { //change the endpoint for production
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -39,6 +99,7 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             const data = await response.json();
             sessionStorage.setItem("access", data["access-token"]);
             sessionStorage.setItem("refresh", data["refresh-token"]);
+            sessionStorage.setItem("role", role);
             navigate("/dashboard");
         }
         catch (error) {
@@ -46,6 +107,11 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             Logger.error("Error Signing in", error);
         }
     };
+    
+    const organizationOptions = organizations.map((org) => ({
+        value: org,
+        label: org,
+    }));
 
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -67,6 +133,67 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
                                     required
                                     className="hover:border-[#3ac285]"
                                 />
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={open}
+                                            className="w-[200px] justify-between"
+                                        >
+                                            {organization || "Select organization..."}
+                                        <ChevronsUpDown className="opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[200px] p-0">
+                                        <Command>
+                                            <CommandInput value={organization} onValueChange={setOrganization} placeholder="Search framework..." className="h-9" />
+                                                <CommandList>
+                                                    <CommandEmpty>Organization not found</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {organizationOptions.map((org) => (
+                                                            <CommandItem
+                                                                key={org.value}
+                                                                value={org.value}
+                                                                onSelect={(currentValue) => {
+                                                                    setOrganization(currentValue);
+                                                                    setOpen(false)
+                                                                }}
+                                                            >
+                                                                {org.label}
+                                                            <Check
+                                                                className={cn("ml-auto", organization === org.value ? "opacity-100" : "opacity-0")}
+                                                            />
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="role" className="block text-left text-sm">Role</Label>
+                                
+                                <Select value={role} onValueChange={setRole}>
+                                    <SelectTrigger className="hover:border-[#3ac285]">
+                                        <span className="truncate font-normal">
+                                            {role ? role.charAt(0).toUpperCase() + role.slice(1) : "Organization Role"}
+                                        </span>
+                                    </SelectTrigger>
+                                    <SelectContent className="hover:border-[#3ac285]">
+                                        <SelectGroup>
+                                            {!orgExists ? (
+                                                <SelectItem value="owner">Owner</SelectItem>
+                                            ) : (
+                                                <>
+                                                    <SelectItem value="head">Head</SelectItem>
+                                                    <SelectItem value="member">Member</SelectItem>
+                                                </>
+                                            )}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="username" className="block text-left text-sm">Username</Label>
@@ -76,6 +203,7 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
                                     onChange={(e) => setUsername(e.target.value)}
                                     placeholder="real person"
                                     required
+                                    autoComplete="uername"
                                     className="hover:border-[#3ac285]"
                                 />
                             </div>
@@ -88,25 +216,39 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="example@email.com"
                                     required
+                                    autoComplete="email"
                                     className="hover:border-[#3ac285]"
                                 />
                             </div>
                             <div className="grid gap-2">
                                 <div className="flex items-center justify-between">
                                     <Label htmlFor="password" className="block text-sm">Password</Label>
-                                    <a href="/auth/forgot-password" className="block text-sm text-blue-500 hover:text-[#3ac285]">Forgot password?</a>
+                                    <Link to="/auth/forgot-password" className="block text-sm text-blue-500 hover:text-[#3ac285]">Forgot password?</Link>
                                 </div>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="all silver tea cups"
-                                    required
-                                    className="hover:border-[#3ac285]"
-                                />
+                                <div className='relative'>
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="all silver tea cups"
+                                        required
+                                        autoComplete="current-password"
+                                        className="pr-12 hover:border-[#3ac285]"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setShowPassword((prev) => !prev)}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-0 h-auto text-gray-500 hover:border-[#3ac285] hover:text-[#3ac285] focus:outline-none focus:ring-0"
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </Button>
+                                </div>
                             </div>
-                            <Button type="submit" className="w-full hover:border-green-600 dark:bg-[#3ac285] dark:hover:bg-[#32a16d] transition-colors">Sign In</Button>
+                            <Button type="submit" className="w-full hover:border-green-600 dark:bg-[#3ac285] dark:hover:bg-[#32a16d] transition-colors">Sign Up</Button>
                         </div>
                         {errorMessage && (
                             <div className="mt-4 text-center text-red-500">
@@ -114,8 +256,8 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
                             </div>
                         )}
                         <div className="mt-4 text-center text-sm">
-                            <span>Don't have an account? </span>
-                            <a href="/auth/sign-up" className="text-blue-500 hover:text-[#3ac285]">Sign up</a>
+                            <span>Already have an account? </span>
+                            <Link to="/auth/sign-in" className="text-blue-500 hover:text-[#3ac285]">Sign In</Link>
                         </div>
                     </form>
                 </CardContent>

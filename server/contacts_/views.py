@@ -31,6 +31,6 @@ class ContactViewSet(viewsets.ModelViewSet):
     @log_execution_time
     def create(self, request, *args, **kwargs):
         """
-        Override the `create` method to log execution time of creating a new customer.
+        Override the `create` method to log execution time of creating a new contact.
         """
         return super().create(request, *args, **kwargs)

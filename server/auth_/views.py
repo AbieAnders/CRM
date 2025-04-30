@@ -122,7 +122,22 @@ def sign_in(request):
     except Exception as e:
         logger.exception("Unexpected error during sign-in for username: %s. Error: %s", username_, str(e))
         return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
+@api_view(['GET'])
+@log_execution_time
+@permission_classes([AllowAny])
+def organizations(request):
+    logger.info("Received org list retrieval Request")
+    try:
+        orgs = Organization.objects.filter(is_active=True).values_list('name', flat=True)
+        org_list = list(orgs)
+        logger.info("Org list retrieved successfully")
+        return Response(org_list)
+
+    except Exception as e:
+        logger.exception("Error fetching organizations: %s", str(e))
+        return Response([], status=500)
+
 @api_view(['POST'])
 @log_execution_time
 @authentication_classes([JWTAuthentication])

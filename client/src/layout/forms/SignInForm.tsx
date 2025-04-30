@@ -122,7 +122,7 @@ export function SignInFormComponent({ className, ...props }: React.ComponentProp
                         )}
                         <div className="mt-4 text-center text-sm">
                             <span>Don't have an account? </span>
-                            <a href="/auth/sign-up" className="text-blue-500 hover:text-[#3ac285]">Sign up</a>
+                            <a href="/auth/sign-up" className="text-blue-500 hover:text-[#3ac285]">Sign Up</a>
                         </div>
                     </form>
                 </CardContent>

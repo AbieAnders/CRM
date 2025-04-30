@@ -6,7 +6,7 @@ import { ThemeProvider } from './components/ui/theme-provider.tsx';
 
 import SignUpComponent from './pages/_auth/SignUpPage.tsx';
 import SignInComponent from './pages/_auth/SignInPage.tsx';
-import ForgotPasswordComponent from './pages/_auth/ForgotPasswordForm.tsx';
+import ResetPasswordComponent from './pages/_auth/ResetPasswordPage.tsx';
 import ProtectedRouteComponent from './components/middleware/ProtectedRoute.tsx';
 
 import DashboardPageComponent from './pages/_dashboard/DashboardPage.tsx';
@@ -32,8 +32,8 @@ const App: React.FC = () => {
             element={<SignInComponent />}
           />
           <Route
-            path="/auth/forgot-password"
-            element={<ForgotPasswordComponent />}
+            path="/auth/reset-password"
+            element={<ResetPasswordComponent />}
           />
 
           <Route
