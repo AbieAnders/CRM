@@ -1,6 +1,7 @@
 import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
 import { SiteHeader } from "../../layout/header/SiteHeader";
 import SidebarComponent from "../../layout/sidebar/Sidebar";
+import { OrgFormComponent } from "../../layout/forms/OrgForm";
 
 const OrgPageComponent: React.FC = () => {
 
@@ -13,7 +14,7 @@ const OrgPageComponent: React.FC = () => {
                     <div className="flex flex-1 flex-col">
                         <div className="@container/main flex flex-1 flex-col gap-2">
                             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-
+                                <OrgFormComponent></OrgFormComponent>
                             </div>
                         </div>
                     </div>

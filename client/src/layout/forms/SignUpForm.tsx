@@ -7,22 +7,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Check, ChevronsUpDown, Command, Eye, EyeOff } from 'lucide-react';
+import { Check, ChevronsUpDown, Eye, EyeOff } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
-import { CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../components/ui/command';
 
 export function SignUpFormComponent({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
     const [organization, setOrganization] = useState("");
     const [orgExists, setOrgExists] = useState(false);
     const [organizations, setOrganizations] = useState<string[]>([]);
-    
+    const [searchValue, setSearchValue] = useState("");
+
     const [role, setRole] = useState("");
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
-    
+
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    
+
     const [open, setOpen] = React.useState(false)
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -107,11 +108,15 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             Logger.error("Error Signing in", error);
         }
     };
-    
+
     const organizationOptions = organizations.map((org) => ({
         value: org,
         label: org,
     }));
+
+    const filteredOrganizations = organizationOptions.filter((org) =>
+        org.label.toLowerCase().includes(searchValue.toLowerCase())
+    );
 
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -125,56 +130,67 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
                         <div className="flex flex-col gap-2">
                             <div className="grid gap-2">
                                 <Label htmlFor="organization" className="block text-left text-sm">Organization</Label>
-                                <Input
-                                    id="organization"
-                                    value={organization}
-                                    onChange={(e) => setOrganization(e.target.value)}
-                                    placeholder="ABEX"
-                                    required
-                                    className="hover:border-[#3ac285]"
-                                />
-                                <Popover>
+
+                                <Popover open={open} onOpenChange={setOpen}>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
                                             role="combobox"
                                             aria-expanded={open}
-                                            className="w-[200px] justify-between"
+                                            className="w-full justify-between"
                                         >
                                             {organization || "Select organization..."}
-                                        <ChevronsUpDown className="opacity-50" />
+                                            <ChevronsUpDown className="opacity-50 ml-2 h-4 w-4" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[200px] p-0">
+                                    <PopoverContent className="w-full p-0">
                                         <Command>
-                                            <CommandInput value={organization} onValueChange={setOrganization} placeholder="Search framework..." className="h-9" />
-                                                <CommandList>
-                                                    <CommandEmpty>Organization not found</CommandEmpty>
-                                                    <CommandGroup>
-                                                        {organizationOptions.map((org) => (
-                                                            <CommandItem
-                                                                key={org.value}
-                                                                value={org.value}
-                                                                onSelect={(currentValue) => {
-                                                                    setOrganization(currentValue);
-                                                                    setOpen(false)
-                                                                }}
-                                                            >
-                                                                {org.label}
+                                            <CommandInput
+                                                value={searchValue}
+                                                onValueChange={(value) => setSearchValue(value)}
+                                                maxLength={39}
+                                                placeholder="Search organization..."
+                                                className="h-9"
+                                            />
+                                            <CommandList>
+                                                <CommandEmpty>No matching organization</CommandEmpty>
+                                                <CommandGroup heading="Available">
+                                                    {filteredOrganizations.map((org) => (
+                                                        <CommandItem
+                                                            key={org.value}
+                                                            value={org.value}
+                                                            onSelect={(currentValue) => {
+                                                                setOrganization(currentValue);
+                                                                setOpen(false)
+                                                            }}
+                                                        >
+                                                            {org.label}
                                                             <Check
-                                                                className={cn("ml-auto", organization === org.value ? "opacity-100" : "opacity-0")}
+                                                                className={cn("ml-auto h-4 w-4", organization === org.value ? "opacity-100" : "opacity-0")}
                                                             />
-                                                            </CommandItem>
-                                                        ))}
-                                                    </CommandGroup>
-                                                </CommandList>
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                                {searchValue && !organizationOptions.some((org) =>
+                                                    org.label.toLowerCase() === searchValue.toLowerCase()) && (
+                                                        <CommandItem
+                                                            onSelect={() => {
+                                                                setOrganization(searchValue);
+                                                                setOpen(false);
+                                                            }}
+                                                            className="text-green-600"
+                                                        >
+                                                            Register "{searchValue}"
+                                                        </CommandItem>
+                                                    )}
+                                            </CommandList>
                                         </Command>
                                     </PopoverContent>
                                 </Popover>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="role" className="block text-left text-sm">Role</Label>
-                                
+
                                 <Select value={role} onValueChange={setRole}>
                                     <SelectTrigger className="hover:border-[#3ac285]">
                                         <span className="truncate font-normal">
@@ -203,7 +219,7 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
                                     onChange={(e) => setUsername(e.target.value)}
                                     placeholder="real person"
                                     required
-                                    autoComplete="uername"
+                                    autoComplete="username"
                                     className="hover:border-[#3ac285]"
                                 />
                             </div>
