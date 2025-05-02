@@ -30,14 +30,18 @@ class UserSerializer(serializers.ModelSerializer):
         organization_name = validated_data.pop('organization')
         role = validated_data.pop('role', 'member')
         
-        if role == 'owner':
-            organization, created = Organization.objects.get_or_create(name=organization_name)
-        else:
-            organization = Organization.objects.filter(name__iexact=organization_name).first()
-            if not organization:
-                raise serializers.ValidationError("Organization does not exist.")
+        organization, created_now = Organization.objects.get_or_create(name=organization_name)
+
+        if role == 'owner' and not created_now:
+            organization, created_now = Organization.objects.get_or_create(name=organization_name)
+        elif role != 'owner' and created_now:
+            raise serializers.ValidationError("The first user must be the owner of a new organization.")
 
         user = User.objects.create_user(**validated_data)
         UserProfile.objects.create(user=user, organization=organization, role=role)
+        
+        if role == 'owner':
+            organization.owner = user
+            organization.save()
 
         return user

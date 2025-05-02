@@ -43,17 +43,18 @@ def sign_up(request):
     try:
         username = request.data.get('username')
         email = request.data.get('email')
-
+        
         if User.objects.filter(username=username).exists():
             return Response({"error": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
         if User.objects.filter(email=email).exists():
             return Response({"error": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            refresh_token = RefreshToken.for_user(user)
+            user_ = serializer.save()
+            
+            refresh_token = RefreshToken.for_user(user_)
             access_token = str(refresh_token.access_token)
 
             response = JsonResponse({

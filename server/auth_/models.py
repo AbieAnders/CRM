@@ -39,7 +39,10 @@ class Organization(models.Model):
         )
 
     def __str__(self):
-        return self.name
+        return f"Organization: {self.name}, Owner: {self.owner})"
+    
+    class Meta:
+        db_table = 'organizations'
 
 class UserProfile(models.Model):
     ROLE_CHOICES = (
@@ -81,7 +84,10 @@ class UserProfile(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.username} Profile"
+        return f"User: {self.user.username}, Role: {self.role})"
+    
+    class Meta:
+        db_table = 'profiles'
 
 class ExpiringToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="active_sessions")
@@ -94,7 +100,10 @@ class ExpiringToken(models.Model):
     
     def __str__(self):
         status = "Expired" if self.is_token_expired() else "Active"
-        return f"{self.user.username} - {self.jti} - Token status: {status}"
+        return f"{self.user.username}, {self.jti}, Token status: {status}"
+    
+    class Meta:
+        db_table = 'tokens'
 
 class DeletionLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -106,3 +115,6 @@ class DeletionLog(models.Model):
     def __str__(self):
         user_display = self.user.username if self.user else "Unknown username"
         return f"{self.content_type} ID {self.object_id} deleted by {user_display}"
+    
+    class Meta:
+        db_table = 'deletion_log'

@@ -95,12 +95,17 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             });
 
             if (!response.ok) {
-                throw new Error("Invalid credentials");
+                const errorData = await response.json();
+                Logger.error("Sign-up failed", errorData);
+                setErrorMessage(errorData.detail || "Invalid credentials or error occurred. Please try again.");
+                return;
             }
             const data = await response.json();
             sessionStorage.setItem("access", data["access-token"]);
             sessionStorage.setItem("refresh", data["refresh-token"]);
             sessionStorage.setItem("role", role);
+            
+            Logger.info("Role:", role);
             navigate("/dashboard");
         }
         catch (error) {
