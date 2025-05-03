@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view
-from django.db import IntegrityError
+from django.db import transaction, IntegrityError
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework import status
@@ -49,24 +49,25 @@ def sign_up(request):
 
         if User.objects.filter(email=email).exists():
             return Response({"error": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user_ = serializer.save()
-            
-            refresh_token = RefreshToken.for_user(user_)
-            access_token = str(refresh_token.access_token)
-
-            response = JsonResponse({
-                "user": serializer.data,
-                "access-token": access_token,
-                "refresh-token": str(refresh_token)
-            })
-            logger.info("User created and tokens generated for username: %s", user.username)
-            return response
         
-        logger.warning("Invalid sign-up data: %s", serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            serializer = UserSerializer(data=request.data)
+            if serializer.is_valid():
+                user_ = serializer.save()
+                
+                refresh_token = RefreshToken.for_user(user_)
+                access_token = str(refresh_token.access_token)
+
+                response = JsonResponse({
+                    "user": serializer.data,
+                    "access-token": access_token,
+                    "refresh-token": str(refresh_token)
+                })
+                logger.info("User created and tokens generated for username: %s", user_.username)
+                return response
+        
+            logger.warning("Invalid sign-up data: %s", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     except IntegrityError as e:
         logger.error("IntegrityError during sign-up for username: %s. Error: %s", request.data.get('username'), str(e))

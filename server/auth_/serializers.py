@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserProfile, Organization
+from django.db import transaction
 
 class UserSerializer(serializers.ModelSerializer):
     organization = serializers.CharField(write_only=True, required=True)
@@ -30,18 +31,19 @@ class UserSerializer(serializers.ModelSerializer):
         organization_name = validated_data.pop('organization')
         role = validated_data.pop('role', 'member')
         
-        organization, created_now = Organization.objects.get_or_create(name=organization_name)
-
-        if role == 'owner' and not created_now:
+        with transaction.atomic():
             organization, created_now = Organization.objects.get_or_create(name=organization_name)
-        elif role != 'owner' and created_now:
-            raise serializers.ValidationError("The first user must be the owner of a new organization.")
 
-        user = User.objects.create_user(**validated_data)
-        UserProfile.objects.create(user=user, organization=organization, role=role)
-        
-        if role == 'owner':
-            organization.owner = user
-            organization.save()
+            if role == 'owner' and not created_now:
+                organization, created_now = Organization.objects.get_or_create(name=organization_name)
+            elif role != 'owner' and created_now:
+                raise serializers.ValidationError("The first user must be the owner of a new organization.")
+
+            user = User.objects.create_user(**validated_data)
+            UserProfile.objects.create(user=user, organization=organization, role=role)
+            
+            if role == 'owner':
+                organization.owner = user
+                organization.save()
 
         return user

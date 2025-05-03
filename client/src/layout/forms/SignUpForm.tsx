@@ -55,27 +55,6 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
         }
     }, [organization, organizations]);
 
-    /*
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            if (organization.trim() !== "") {
-                fetch(`http://127.0.0.1:8000/organizations/check-exists?name=${encodeURIComponent(organization)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        setOrgExists(data.exists);
-                    })
-                    .catch(err => {
-                        Logger.error("Error checking organization existence", err);
-                        setOrgExists(false);
-                    });
-            } else {
-                setOrgExists(false);
-            }
-        }, 500);
-
-        return () => clearTimeout(timeout);
-    }, [organization]);*/
-
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         const payload = {
@@ -104,7 +83,7 @@ export function SignUpFormComponent({ className, ...props }: React.ComponentProp
             sessionStorage.setItem("access", data["access-token"]);
             sessionStorage.setItem("refresh", data["refresh-token"]);
             sessionStorage.setItem("role", role);
-            
+
             Logger.info("Role:", role);
             navigate("/dashboard");
         }
